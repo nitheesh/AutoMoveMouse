@@ -1,0 +1,7 @@
+Bash script to change mouse position while screen goes idle.
+
+Install xautomation and xprintidle.
+
+On Ubuntu,
+ 
+   sudo apt-get install xautomation xprintidle
