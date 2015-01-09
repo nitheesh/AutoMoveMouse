@@ -8,16 +8,20 @@ function MoveMouse () {
     xx=$[ 150 + $[ RANDOM % 10 ]]
     yy=$[ 150 + $[ RANDOM % 10 ]]
     xte "mousermove $xx $yy"
-    sleep 1
+    sleep 0.5
     xx=$[ 130 + $[ RANDOM % 10 ]]
     yy=$[ 130 + $[ RANDOM % 10 ]]
     xte "mousermove -$xx -$yy"
     
-    echo "Changing window"
-    xte 'keydown Alt_L' 'key Tab' && sleep 2 && xte 'keyup Alt_L'
-    sleep 2
-    echo "Reverting to terminal window"
-    xte 'keydown Alt_L' 'key Tab' && sleep 2 && xte 'keyup Alt_L'
+    #Generate a random number b/w 1 - 10 and sleep.
+    randm=`echo $RANDOM % 10 + 1 | bc`
+    echo "sleeping for " $randm
+    sleep $randm
+    echo "Changing to another window"
+    #Get a random window
+    _randWindw=`echo $RANDOM % 10 + 1 | bc`
+    echo "random windw " $_randWindw
+    xte 'keydown Alt_L' && for i in $(seq 1 $_randWindw); do sleep 0.5; xte 'key Tab'; done && xte 'keyup Alt_L'
 }  
 
 while true;
@@ -25,7 +29,7 @@ while true;
     idle=`expr $(xprintidle) / 1000`
     echo "$idle seconds idle";
     if [ $idle -gt "20" ]; then
-      echo "Starting mouse change"
+      echo "Starting mouse movement and window change."
       MoveMouse
     fi
     sleep 5
