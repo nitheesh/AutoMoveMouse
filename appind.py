@@ -21,12 +21,12 @@ class AppIndicatorMouse:
     radio.show()
     self.menu.append(radio)
 
-    radio1 = gtk.RadioMenuItem(None, "Pause")
+    radio1 = gtk.RadioMenuItem(radio, "Pause")
     radio1.connect("activate", self.pause_btn_pressed)
     radio1.show()
     self.menu.append(radio1)
 
-    radio2 = gtk.RadioMenuItem(None, "Stop")
+    radio2 = gtk.RadioMenuItem(radio, "Stop")
     radio2.connect("activate", self.stop_btn_pressed)
     radio2.show()
     self.menu.append(radio2)
@@ -44,20 +44,19 @@ class AppIndicatorMouse:
     gtk.main_quit()
 
   def start_btn_pressed(self, widget):
-    print widget
+    self.ind.set_label("Running")
+    print "Start clicked."
 
   def pause_btn_pressed(self, widget):
-    print widget
+    self.ind.set_label("Paused")
+    print "pause clicked."
 
   def stop_btn_pressed(self, widget):
-    print widget
+    self.ind.set_label("Stopped")
+    print "Stop clicked."
 
-
-def main():
-    gtk.main()
-    return 0
 
 if __name__ == "__main__":
     indicator = AppIndicatorMouse()
-    main()
+    gtk.main()
 
