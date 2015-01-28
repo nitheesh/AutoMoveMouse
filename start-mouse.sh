@@ -26,11 +26,15 @@ function MoveMouse () {
 
 while true;
   do
-    idle=`expr $(xprintidle) / 1000`
-    echo "$idle seconds idle";
-    if [ $idle -gt "20" ]; then
-      echo "Starting mouse movement and window change."
-      MoveMouse
-    fi
+    if [ ! -f /tmp/automove-stopped.do ]; then  
+      idle=`expr $(xprintidle) / 1000`
+      echo "$idle seconds idle";
+      if [ $idle -gt "20" ]; then
+        echo "Starting mouse movement and window change."
+        MoveMouse
+      fi
+    else
+      echo "Mouse move stopped..."  
+    fi  
     sleep 5
   done  
