@@ -16,9 +16,8 @@ class AppIndicatorMouse:
     self.ind.set_attention_icon ("indicator-messages-new")
     self.ind.set_icon("distributor-logo")
 
-    thread = threading.Thread(target=self.StartBashScript)
-    thread.daemon = True
-    thread.start()
+    self.thread = threading.Thread(target=self.StartBashScript)
+    self.thread.daemon = True
 
     # create a menu
     self.menu = gtk.Menu()
@@ -45,20 +44,25 @@ class AppIndicatorMouse:
     self.ind.set_menu(self.menu)
 
   def quit(self, widget, data=None):
-    print thread
-    atexit.register(thread.terminate)
+    print self.thread
+    atexit.register(self.thread.terminate)
     gtk.main_quit()
 
   def start_btn_pressed(self, widget):
-    self.ind.set_label("Running")
+    # self.ind.set_label("Running")
     try:
       os.remove('/tmp/automove-stopped.do')
     except:
       print "Unable to remove file"  
+    try:  
+      self.thread.start()
+      self.thread.join()
+    except:
+      print "thread RuntimeError!"  
     print "Start clicked."
 
   def stop_btn_pressed(self, widget):
-    self.ind.set_label("Stopped")
+    # self.ind.set_label("Stopped")
     open('/tmp/automove-stopped.do', 'a').close()
     print "Stop clicked."
 
@@ -69,4 +73,3 @@ class AppIndicatorMouse:
 if __name__ == "__main__":
     indicator = AppIndicatorMouse()
     gtk.main()
-

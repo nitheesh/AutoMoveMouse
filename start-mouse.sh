@@ -1,8 +1,16 @@
 #!/bin/bash
 
-####### Bash script to change mouse position while screen goes idle. ######
+####### Bash script to change mouse position and automate apps while screen goes idle ###
 ### _author : Nitheesh .CS (nitheesh.cs007@gmail.com) ###
 ### _version : 0.1 ####
+
+## Note : Please disable "Show desktop" option in Unity Alt+Tab switcher
+## -- http://askubuntu.com/questions/167263/how-can-i-remove-show-desktop-from-the-alt-tab-application-switcher
+
+Browsers="Firefox | Google-chrome-stable | Google-chrome | Google-chrome-unstable | Google-chrome-beta"
+gedit="Gedit"
+sublm="Sublime_text"
+Max_Idle="6"
 
 function MoveMouse () {
     xx=$[ 150 + $[ RANDOM % 10 ]]
@@ -22,14 +30,33 @@ function MoveMouse () {
     _randWindw=`echo $RANDOM % 10 + 1 | bc`
     echo "random windw " $_randWindw
     xte 'keydown Alt_L' && for i in $(seq 1 $_randWindw); do sleep 0.5; xte 'key Tab'; done && xte 'keyup Alt_L'
-}  
+    sleep 3;
+    _curWindow=$(xprop -id $(xprop -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}')
+    echo $_curWindow
+    _curWindow=`echo $_curWindow | tr -d '"'`
+
+    _rand_Tab=$(shuf -i 3-8 -n 1)
+
+    if grep -q $_curWindow <<<$Browsers; then
+      xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 0.5; xte 'key Tab'; done && xte 'keyup Alt_L'
+
+    elif grep -q $_curWindow <<<$gedit; then
+      for i in $(seq 1 $_rand_Tab); do sleep 1; xte 'key Page_Down'; done
+
+    elif grep -q $_curWindow <<<$sublm; then
+      xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 0.8; xte 'key Page_Down'; done && xte 'keyup Control_L'
+      sleep 2
+      _rand_Tab=$(shuf -i 10-20 -n 1)
+      xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 1; xte 'key Down'; done && xte 'keyup Control_L'
+    fi
+}
 
 while true;
   do
-    if [ ! -f /tmp/automove-stopped.do ]; then  
+    if [ ! -f /tmp/automove-stopped.do ]; then
       idle=`expr $(xprintidle) / 1000`
       echo "$idle seconds idle";
-      if [ $idle -gt "20" ]; then
+      if [ $idle -gt $Max_Idle ]; then
         echo "Starting mouse movement and window change."
         MoveMouse
       fi
