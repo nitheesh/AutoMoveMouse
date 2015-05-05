@@ -44,8 +44,8 @@ class AppIndicatorMouse:
     self.ind.set_menu(self.menu)
 
   def quit(self, widget, data=None):
-    print self.thread
-    atexit.register(self.thread.terminate)
+    # print self.thread
+    self._bash.kill()
     gtk.main_quit()
 
   def start_btn_pressed(self, widget):
@@ -67,7 +67,8 @@ class AppIndicatorMouse:
     print "Stop clicked."
 
   def StartBashScript(self):
-    self._bash = subprocess.Popen("./start-mouse.sh", shell=True)
+    #stdout=subprocess.PIPE
+    self._bash = subprocess.Popen("exec " + "./start-mouse.sh", shell=True)
     print self._bash.pid
 
 if __name__ == "__main__":
