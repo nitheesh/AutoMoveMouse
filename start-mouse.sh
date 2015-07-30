@@ -10,16 +10,18 @@
 Browsers="Firefox | Google-chrome-stable | Google-chrome | Google-chrome-unstable | Google-chrome-beta"
 gedit="Gedit"
 sublm="Sublime_text"
-Max_Idle="6"
+Max_Idle="5"
+
+lockFile="/tmp/automouse.lck"
 
 function MoveMouse () {
-    xx=$[ 150 + $[ RANDOM % 10 ]]
-    yy=$[ 150 + $[ RANDOM % 10 ]]
-    xte "mousermove $xx $yy"
-    sleep 0.5
-    xx=$[ 130 + $[ RANDOM % 10 ]]
-    yy=$[ 130 + $[ RANDOM % 10 ]]
-    xte "mousermove -$xx -$yy"
+    # xx=$[ 150 + $[ RANDOM % 10 ]]
+    # yy=$[ 150 + $[ RANDOM % 10 ]]
+    # xte "mousermove $xx $yy"
+    # sleep 0.5
+    # xx=$[ 130 + $[ RANDOM % 10 ]]
+    # yy=$[ 130 + $[ RANDOM % 10 ]]
+    # xte "mousermove -$xx -$yy"
     
     #Generate a random number b/w 1 - 10 and sleep.
     randm=`echo $RANDOM % 10 + 1 | bc`
@@ -37,31 +39,69 @@ function MoveMouse () {
 
     _rand_Tab=$(shuf -i 3-8 -n 1)
 
-    if grep -q $_curWindow <<<$Browsers; then
-      xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 0.5; xte 'key Tab'; done && xte 'keyup Alt_L'
+    if ! GetIdle $1; then
+      if grep -q $_curWindow <<<$Browsers; then
+        if ! GetIdle $1; then
+          xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 0.5; 
+          xte 'key Tab'; done && xte 'keyup Control_L'
+        fi  
 
-    elif grep -q $_curWindow <<<$gedit; then
-      for i in $(seq 1 $_rand_Tab); do sleep 1; xte 'key Page_Down'; done
+      elif grep -q $_curWindow <<<$gedit; then
+        for i in $(seq 1 $_rand_Tab); do sleep 1; 
+        xte 'key Page_Down'; done
 
-    elif grep -q $_curWindow <<<$sublm; then
-      xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 0.8; xte 'key Page_Down'; done && xte 'keyup Control_L'
-      sleep 2
-      _rand_Tab=$(shuf -i 10-20 -n 1)
-      xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 1; xte 'key Down'; done && xte 'keyup Control_L'
+      elif grep -q $_curWindow <<<$sublm; then
+        xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 0.8; 
+        xte 'key Page_Down'; done && xte 'keyup Control_L'
+        sleep 2
+        _rand_Tab=$(shuf -i 10-20 -n 1)
+        xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 1; 
+        xte 'key Down'; done && xte 'keyup Control_L'
+      fi
     fi
 }
 
-while true;
-  do
-    if [ ! -f /tmp/automove-stopped.do ]; then
-      idle=`expr $(xprintidle) / 1000`
-      echo "$idle seconds idle";
-      if [ $idle -gt $Max_Idle ]; then
-        echo "Starting mouse movement and window change."
-        MoveMouse
-      fi
-    else
-      echo "Mouse move stopped..."  
-    fi  
-    sleep 5
-  done  
+function GetIdle() {
+  idle=`expr $(xprintidle) / 1000`;
+  # echo $idle;
+  if [ $idle -gt $Max_Idle ]; then
+    # echo "System goes idle";
+    return 0
+  else
+    # echo "System active"
+    return 1
+  fi  
+}
+
+MoveMouse
+echo "Releasing the lock file.."
+rm -rf /tmp/automouse.lck
+exit
+
+# while true;
+#   do
+#     if GetIdle $1; then
+#       echo $idle
+#       echo "System goes idle"
+#       MoveMouse      
+#     else
+#       echo "System active"
+#     fi
+#     sleep 3
+#   done
+
+
+# while true;
+#   do
+#     if [ ! -f /tmp/automove-stopped.do ]; then
+#       idle=`expr $(xprintidle) / 1000`
+#       echo "$idle seconds idle";
+#       if [ $idle -gt $Max_Idle ]; then
+#         echo "Starting mouse movement and window change."
+#         MoveMouse
+#       fi
+#     else
+#       echo "Mouse move stopped..."  
+#     fi  
+#     sleep 5
+#   done  
