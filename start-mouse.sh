@@ -77,31 +77,3 @@ MoveMouse
 echo "Releasing the lock file.."
 rm -rf /tmp/automouse.lck
 exit
-
-# while true;
-#   do
-#     if GetIdle $1; then
-#       echo $idle
-#       echo "System goes idle"
-#       MoveMouse      
-#     else
-#       echo "System active"
-#     fi
-#     sleep 3
-#   done
-
-
-# while true;
-#   do
-#     if [ ! -f /tmp/automove-stopped.do ]; then
-#       idle=`expr $(xprintidle) / 1000`
-#       echo "$idle seconds idle";
-#       if [ $idle -gt $Max_Idle ]; then
-#         echo "Starting mouse movement and window change."
-#         MoveMouse
-#       fi
-#     else
-#       echo "Mouse move stopped..."  
-#     fi  
-#     sleep 5
-#   done  

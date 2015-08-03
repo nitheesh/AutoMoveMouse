@@ -15,9 +15,10 @@ from Xlib import display
 
 MaxIdle = 10
 lockFile = "/tmp/automouse.lck"
-# Browsers = "Firefox | Google-chrome-stable | Google-chrome | Google-chrome-unstable | Google-chrome-beta"
-# gedit = "Gedit"
-# sublm = "Sublime_text"
+appFile = "/tmp/appfile.lck"
+
+# Touch the signal file on script startup
+open(appFile, 'a').close()
 
 class AppIndicatorMouse:
   def __init__(self):
@@ -26,8 +27,7 @@ class AppIndicatorMouse:
     self.ind.set_attention_icon ("indicator-messages-new")
     self.ind.set_icon("distributor-logo")
 
-    self.thread = threading.Thread(target=self.StartBashScript)
-    self.thread.daemon = True
+    self.start = True
 
     # create a menu
     self.menu = gtk.Menu()
@@ -53,86 +53,73 @@ class AppIndicatorMouse:
 
     self.ind.set_menu(self.menu)
 
+    self.thread = threading.Thread(target=self.StartbashScript)
+    self.thread.daemon = True      
+    self.thread.start()
+    # self.thread.join()
+
   def quit(self, widget, data=None):
     # print self.thread
-    self._bash.kill()
+    try:
+      self._bash.kill()
+    except:
+      pass  
     gtk.main_quit()
 
   def start_btn_pressed(self, widget):
-    # self.ind.set_label("Running")
+    print "Start button clicked."
     try:
-      os.remove('/tmp/automove-stopped.do')
+      os.remove(appFile)
     except:
-      print "Unable to remove file"  
-    try:  
-      self.thread.start()
-      self.thread.join()
-    except:
-      print "thread RuntimeError!"  
-    print "Start clicked."
+      print "Unable to remove appFile"  
 
   def stop_btn_pressed(self, widget):
-    # self.ind.set_label("Stopped")
-    open('/tmp/automove-stopped.do', 'a').close()
     print "Stop clicked."
+    open(appFile, 'a').close()
+    # self.ind.set_label("Stopped")
 
-  def StartBashScript(self):
-    #stdout=subprocess.PIPE
-    self._bash = subprocess.Popen("exec " + "./start-mouse.sh", shell=True)
-    print self._bash.pid
-
-class Test():
-  def __init__(self):
+  def StartbashScript(self):
     self._bash = None
-    FirstRun = True
+    self.thread1 = None
+    print os.path.isfile(lockFile)
+    prev_pos = None
     while True:
-      idle = commands.getstatusoutput('expr $(xprintidle) / 1000')[1]
-      if self._bash is None:
-        idle = idle
-      elif (int(idle) == 0) and (not FirstRun) and (self._bash is not None):
-        idle = None
-
-      if not os.path.isfile(lockFile):
-        self._bash = None
-      print os.path.isfile(lockFile)
-      print idle
-      if (idle is not None) and (int(idle) > MaxIdle):
-        if self._bash is not None:
-          print "debug1"
-          try:
-            out, err = self._bash.communicate()
-            print out
-          except:
-            pass
-        elif not os.path.isfile(lockFile):
-          print "debug2"
-          print str(idle) + str(" : system goes idle")
-          # self.AutoMouseMove()
-          self.thread = threading.Thread(target=self.AutoMouseMove)
-          self.thread.daemon = True
-          self.thread.start()
-          self.thread.join()
-        else:
-          print "debug3"  
+      if os.path.isfile(appFile):
+        print "App is on stop mode!!"
+        time.sleep(1)
+        continue
       else:
-        print str(idle) + str(" : system active")
-      FirstRun = False
+        if not os.path.isfile(lockFile):
+          self._bash = None
+          prev_pos = None
+        idle = commands.getstatusoutput('expr $(xprintidle) / 1000')[1]
+        if (int(idle) > MaxIdle):
+          if self._bash is None:
+            print "system goes idle..!"
+            self.thread1 = threading.Thread(target=self.AutoMouseMove)
+            self.thread1.daemon = True
+            self.thread1.start()
+            self.thread1.join()
+        else:
+          print str(idle) + str(" : system active")
+          if self._bash is not None:
+            # print("The mouse position on the screen is {0}".format(self.mousepos()))
+            cur_pos = self.mousepos()
+            print "Current postion" + str(cur_pos)
+            if prev_pos is not None and cur_pos != prev_pos:
+              print "System activated by user input"
+              self._bash.terminate()
+              self._bash = None
+              print "Lock file removed!"
+              os.remove(lockFile)
+            prev_pos = cur_pos
+      FirstRun = False  
       time.sleep(1)
 
-  def monitor(self):
-    f = open(r'/dev/input/mice', 'r')
-    line = f.readline()
-    if line:
-      print 'Mouse moved',
-      self._bash.terminate()
-      print "Releasing the lock file from python script.."
-      try:
-        os.remove(lockFile)
-      except:
-        pass  
-    else:
-      print "no movement...."
-
+  def mousepos(self):
+    """mousepos() --> (x, y) get the mouse coordinates on the screen (linux, Xlib)."""
+    data = display.Display().screen().root.query_pointer()._data
+    return data["root_x"]
 
   def AutoMouseMove(self):
     open(lockFile, 'a').close()
@@ -143,34 +130,38 @@ class Test1():
   def __init__(self):
     self._bash = None
     self.thread = None
+    indicator = AppIndicatorMouse()
+    gtk.main()    
     print os.path.isfile(lockFile)
     prev_pos = None
     while True:
-      if not os.path.isfile(lockFile):
-        self._bash = None
-        prev_pos = None
-      # print "main func running"
-      idle = commands.getstatusoutput('expr $(xprintidle) / 1000')[1]
-      if (int(idle) > MaxIdle):
-        if self._bash is None:
-          print "system goes idle..!"
-          self.thread = threading.Thread(target=self.AutoMouseMove)
-          self.thread.daemon = True
-          self.thread.start()
-          self.thread.join()
+      if os.path.isfile(appFile):
+        continue
       else:
-        print str(idle) + str(" : system active")
-        if self._bash is not None:
-          # print("The mouse position on the screen is {0}".format(self.mousepos()))
-          cur_pos = self.mousepos()
-          print "Current postion" + str(cur_pos)
-          if prev_pos is not None and cur_pos != prev_pos:
-            print "System activated by user input"
-            self._bash.terminate()
-            self._bash = None
-            print "Lock file removed!"
-            os.remove(lockFile)
-          prev_pos = cur_pos
+        if not os.path.isfile(lockFile):
+          self._bash = None
+          prev_pos = None
+        idle = commands.getstatusoutput('expr $(xprintidle) / 1000')[1]
+        if (int(idle) > MaxIdle):
+          if self._bash is None:
+            print "system goes idle..!"
+            self.thread = threading.Thread(target=self.AutoMouseMove)
+            self.thread.daemon = True
+            self.thread.start()
+            self.thread.join()
+        else:
+          print str(idle) + str(" : system active")
+          if self._bash is not None:
+            # print("The mouse position on the screen is {0}".format(self.mousepos()))
+            cur_pos = self.mousepos()
+            print "Current postion" + str(cur_pos)
+            if prev_pos is not None and cur_pos != prev_pos:
+              print "System activated by user input"
+              self._bash.terminate()
+              self._bash = None
+              print "Lock file removed!"
+              os.remove(lockFile)
+            prev_pos = cur_pos
       FirstRun = False  
       time.sleep(1)
 
@@ -185,6 +176,7 @@ class Test1():
     print self._bash.pid
 
 if __name__ == "__main__":
-    # Test = Test1()
-    indicator = AppIndicatorMouse()
-    gtk.main()
+  gtk.gdk.threads_init()
+  # test = Test1()
+  indicator = AppIndicatorMouse()
+  gtk.main()
