@@ -28,6 +28,8 @@ class AppIndicatorMouse:
     self.ind.set_icon("distributor-logo")
 
     self.start = True
+    self.timer = None
+    self.timer_text = ""
 
     # create a menu
     self.menu = gtk.Menu()
@@ -43,6 +45,11 @@ class AppIndicatorMouse:
     radio1.connect("activate", self.stop_btn_pressed)
     radio1.show()
     self.menu.append(radio1)
+
+    button = gtk.MenuItem(label="Timer")
+    button.connect("activate", self.TimerpopUp)
+    button.show()
+    self.menu.append(button)
 
     image = gtk.ImageMenuItem(gtk.STOCK_QUIT)
     image.connect("activate", self.quit)
@@ -81,9 +88,23 @@ class AppIndicatorMouse:
   def StartbashScript(self):
     self._bash = None
     self.thread1 = None
-    print os.path.isfile(lockFile)
     prev_pos = None
+    count = 0
+    # self.timer = 30
     while True:
+      if self.timer is not None:
+        count = count + 1
+        if int(count) >= int(self.timer) and not os.path.isfile(lockFile):
+          try:
+            print "Timer reached"
+            count = 0
+            self.timer = None
+            open(appFile, 'a').close()
+          except:
+            print "Timer encountered an error!!"
+            pass
+      else:
+        count = 0  
       if os.path.isfile(appFile):
         print "App is on stop mode!!"
         time.sleep(1)
@@ -107,10 +128,10 @@ class AppIndicatorMouse:
             cur_pos = self.mousepos()
             print "Current postion" + str(cur_pos)
             if prev_pos is not None and cur_pos != prev_pos:
+              subprocess.Popen("exec " + "xte 'keyup Control_L' && xte 'keyup Alt_L'", shell=True, stdout=subprocess.PIPE)
               print "System activated by user input"
               self._bash.terminate()
               self._bash = None
-              subprocess.Popen("exec " + "xte 'keyup Control_L' && xte 'keydown Alt_L'", shell=True, stdout=subprocess.PIPE)
               print "Lock file removed!"
               os.remove(lockFile)
             prev_pos = cur_pos
@@ -126,6 +147,50 @@ class AppIndicatorMouse:
     open(lockFile, 'a').close()
     self._bash = subprocess.Popen("exec " + "./start-mouse.sh", shell=True, stdout=subprocess.PIPE)
     print self._bash.pid
+
+  def TimerpopUp(self,btn):
+    #base this on a message dialog
+    dialog = gtk.MessageDialog(
+        None,
+        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+        gtk.MESSAGE_QUESTION,
+        gtk.BUTTONS_OK,
+        None)
+    dialog.set_markup('Please set the <b>timer</b>:')
+    #create the text input field
+    entry = gtk.Entry()
+    entry.set_text(self.timer_text)
+    #allow the user to press enter to do ok
+    entry.connect("activate", self.responseToDialog, dialog, gtk.RESPONSE_OK)
+    entry.connect('changed', self.on_changed)
+    #create a horizontal box to pack the entry and a label
+    hbox = gtk.HBox()
+    hbox.pack_start(gtk.Label("Timer (min):"), False, 5, 5)
+    hbox.pack_end(entry)
+    #some secondary text
+    # dialog.format_secondary_markup("This will be used for <i>identification</i> purposes")
+    #add it and show it
+    dialog.vbox.pack_end(hbox, True, True, 0)
+    dialog.show_all()
+    #go go go
+    dialog.run()
+    text = entry.get_text()
+    dialog.destroy()
+    if text == '':
+      self.timer_text = ""
+      self.timer = None
+    else:  
+      self.timer_text = text
+      self.timer = int(text) * 60
+    print self.timer_text
+    print "Automation will be active for next " + str(self.timer_text) + str(" mins")
+
+  def on_changed(self, entry):
+    text = entry.get_text().strip()
+    entry.set_text(''.join([i for i in text if i in '123456789']))
+
+  def responseToDialog(entry, dialog, response):
+    dialog.response(response)
 
 if __name__ == "__main__":
   gtk.gdk.threads_init()
