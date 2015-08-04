@@ -5,3 +5,4 @@ Install xautomation and xprintidle.
 On Ubuntu,
  
    sudo apt-get install xautomation xprintidle
+   sudo apt-get install python-appindicator python-xlib
