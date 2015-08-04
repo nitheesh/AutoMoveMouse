@@ -138,6 +138,7 @@ class AppIndicatorMouse:
       FirstRun = False  
       time.sleep(1)
 
+
   def mousepos(self):
     """mousepos() --> (x, y) get the mouse coordinates on the screen (linux, Xlib)."""
     data = display.Display().screen().root.query_pointer()._data
