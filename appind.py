@@ -110,55 +110,7 @@ class AppIndicatorMouse:
               print "System activated by user input"
               self._bash.terminate()
               self._bash = None
-              print "Lock file removed!"
-              os.remove(lockFile)
-            prev_pos = cur_pos
-      FirstRun = False  
-      time.sleep(1)
-
-  def mousepos(self):
-    """mousepos() --> (x, y) get the mouse coordinates on the screen (linux, Xlib)."""
-    data = display.Display().screen().root.query_pointer()._data
-    return data["root_x"]
-
-  def AutoMouseMove(self):
-    open(lockFile, 'a').close()
-    self._bash = subprocess.Popen("exec " + "./start-mouse.sh", shell=True, stdout=subprocess.PIPE)
-    print self._bash.pid
-
-class Test1():
-  def __init__(self):
-    self._bash = None
-    self.thread = None
-    indicator = AppIndicatorMouse()
-    gtk.main()    
-    print os.path.isfile(lockFile)
-    prev_pos = None
-    while True:
-      if os.path.isfile(appFile):
-        continue
-      else:
-        if not os.path.isfile(lockFile):
-          self._bash = None
-          prev_pos = None
-        idle = commands.getstatusoutput('expr $(xprintidle) / 1000')[1]
-        if (int(idle) > MaxIdle):
-          if self._bash is None:
-            print "system goes idle..!"
-            self.thread = threading.Thread(target=self.AutoMouseMove)
-            self.thread.daemon = True
-            self.thread.start()
-            self.thread.join()
-        else:
-          print str(idle) + str(" : system active")
-          if self._bash is not None:
-            # print("The mouse position on the screen is {0}".format(self.mousepos()))
-            cur_pos = self.mousepos()
-            print "Current postion" + str(cur_pos)
-            if prev_pos is not None and cur_pos != prev_pos:
-              print "System activated by user input"
-              self._bash.terminate()
-              self._bash = None
+              subprocess.Popen("exec " + "xte 'keyup Control_L' && xte 'keydown Alt_L'", shell=True, stdout=subprocess.PIPE)
               print "Lock file removed!"
               os.remove(lockFile)
             prev_pos = cur_pos

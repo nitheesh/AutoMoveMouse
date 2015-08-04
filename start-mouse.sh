@@ -10,9 +10,10 @@
 Browsers="Firefox | Google-chrome-stable | Google-chrome | Google-chrome-unstable | Google-chrome-beta"
 gedit="Gedit"
 sublm="Sublime_text"
+skype="Skype"
 Max_Idle="5"
 
-lockFile="/tmp/automouse.lck"
+lockFile="/tmp/automouse.lck" 
 
 function MoveMouse () {
     # xx=$[ 150 + $[ RANDOM % 10 ]]
@@ -36,7 +37,6 @@ function MoveMouse () {
     _curWindow=$(xprop -id $(xprop -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}')
     echo $_curWindow
     _curWindow=`echo $_curWindow | tr -d '"'`
-
     _rand_Tab=$(shuf -i 3-8 -n 1)
 
     if ! GetIdle $1; then
@@ -57,6 +57,10 @@ function MoveMouse () {
         _rand_Tab=$(shuf -i 10-20 -n 1)
         xte 'keydown Control_L' && for i in $(seq 1 $_rand_Tab); do sleep 1; 
         xte 'key Down'; done && xte 'keyup Control_L'
+
+      elif grep -q $_curWindow <<<$skype; then
+        xte 'keydown Alt_L' && xte 'key F4' && sleep 0.5 && xte 'keyup Alt_L';
+
       fi
     fi
 }
