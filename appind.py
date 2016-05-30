@@ -35,6 +35,7 @@ class AppIndicatorMouse:
     self.menu = gtk.Menu()
 
     _radio = gtk.RadioMenuItem(None, "Demo")
+    _radio1 = gtk.RadioMenuItem(None, "Demo")
 
     radio = gtk.RadioMenuItem(_radio, "Start")
     radio.connect("activate", self.start_btn_pressed)
@@ -45,6 +46,11 @@ class AppIndicatorMouse:
     radio1.connect("activate", self.stop_btn_pressed)
     radio1.show()
     self.menu.append(radio1)
+
+    self.dis_web = gtk.CheckMenuItem("kuku")
+    self.dis_web.connect("toggled", self.disable_webcam)
+    self.dis_web.show()
+    self.menu.append(self.dis_web)
 
     button = gtk.MenuItem(label="Timer")
     button.connect("activate", self.TimerpopUp)
@@ -192,6 +198,12 @@ class AppIndicatorMouse:
 
   def responseToDialog(entry, dialog, response):
     dialog.response(response)
+
+  def disable_webcam(self, widget, data=None):
+  	if widget.get_active():
+  		os.system("echo 'passwd' | sudo -S modprobe -r uvcvideo")
+  	else:
+  		os.system("echo 'passwd' | sudo -S modprobe uvcvideo")
 
 if __name__ == "__main__":
   gtk.gdk.threads_init()
